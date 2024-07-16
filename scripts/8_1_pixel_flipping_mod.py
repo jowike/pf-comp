@@ -1,5 +1,7 @@
 import os
 import re
+import gc
+
 import pandas as pd
 import numpy as np
 
@@ -143,6 +145,7 @@ def main():
     state_list = []
     for ds_fname in ds_listdir:
         i = i + 1
+        if i <= len(log_listdir): continue
 
         print("Iter " + str(i) + " / " + str(iters))
 
@@ -517,12 +520,18 @@ def main():
                             "start_date": start_date,
                         }
                     )
+                    gc.collect()
 
         save_state(
             state_list=state_list,
             log_path=f'../logs/log_{os.path.basename(ds_fname).split(".")[0]}.json',
         )
+        save_state(
+            state_list=state_list,
+            log_path=os.path.join(model_dirpath, f'log_{os.path.basename(ds_fname).split(".")[0]}.json')
+        )
         print(17 * "-")
+        break
 
 
 if __name__ == "__main__":
