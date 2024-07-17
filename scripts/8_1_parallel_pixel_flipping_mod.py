@@ -421,14 +421,14 @@ def main(df_long):
     save_state(
         state_list=state_list,
         log_path=os.path.join(
-            args.log_path, f'/log_{os.path.basename(ds_fname).split(".")[0]}.json'
+            '/Users/ejowik001/Desktop/pf-comp/logs/', f'log_{os.path.basename(ds_fname).split(".")[0]}.json'
         ),
     )
     print(17 * "-")
 
 
-# path = Path(os.path.dirname(__file__))
-path = "/home2/faculty/ejowik/mts-nowcasting/"
+path = Path(os.path.dirname(__file__)).parent
+# path = "/home2/faculty/ejowik/mts-nowcasting/"
 
 src_path = os.path.join(path, "data/03_intermediate/data_source/")
 ds_path = os.path.join(path, f"data/4_features/")
@@ -495,11 +495,12 @@ for ds_fname in ds_listdir:
 
     list_df.append(ds_long)
 
+list_df = list_df[::-1]
 
 from multiprocessing import Pool
 
 if __name__ == "__main__":
-    with Pool(124) as p:
+    with Pool(6) as p:
         # results = p.map(main, list_df)
         p.map(main, list_df)
 
