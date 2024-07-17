@@ -481,7 +481,7 @@ for ds_fname in ds_listdir:
 from multiprocessing import Pool
 
 if __name__ == "__main__":
-    with Pool(111) as p:
+    with Pool(4) as p:
         # results = p.map(main, list_df)
         p.map(main, list_df)
 

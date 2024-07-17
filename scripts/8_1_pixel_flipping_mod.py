@@ -112,7 +112,7 @@ for path, subdirs, files in os.walk(src_path):
 
 n_periods = 12
 window_size = 12
-num_starting_points = 3
+num_starting_points = 1
 
 estimators = [
     LinearRegression(),

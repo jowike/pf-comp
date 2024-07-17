@@ -436,7 +436,7 @@ model_dirpath = os.path.join(path, f"data/7_pixel_flipping/")
 
 n_periods = 12
 window_size = 12
-num_starting_points = 3
+num_starting_points = 1
 
 estimators = [
     LinearRegression(),
