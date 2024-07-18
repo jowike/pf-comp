@@ -45,6 +45,7 @@ from matplotlib.colors import LinearSegmentedColormap, to_hex
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
+
 def plot_predictions(
     dt: pd.Series,
     y_pred: pd.Series,
@@ -149,10 +150,7 @@ def main_unit(df_long):
     ds_fname = set(df_long["ds_fname"]).pop()
     ds_long = df_long.drop(columns=["ds_fname"])
 
-    model_output_fname = (
-        os.path.basename(ds_fname)
-        .replace("csv", "json")
-    )
+    model_output_fname = os.path.basename(ds_fname).replace("csv", "json")
 
     if model_output_fname in os.listdir(model_dirpath):
         print(f"WARNING: {model_output_fname} already exists.")
@@ -417,84 +415,84 @@ def main_unit(df_long):
         # with open(os.path.join(model_dirpath, model_output_fname), "w") as f:
         #     json.dump(accuracy_report, f)
         # print(f"INFO: {model_output_fname} saved locally")
-        exp_results.append({
-            f"{type(model).__name__}": accuracy_report
-        })
+        exp_results.append({f"{type(model).__name__}": accuracy_report})
     with open(os.path.join(model_dirpath, model_output_fname), "w") as f:
         json.dump(exp_results, f)
     print(17 * "-")
     # return accuracy_report
 
 
+# path = Path(os.path.dirname(__file__))
+path = "/root/pf-comp/"
+
+src_path = os.path.join(path, "data/03_intermediate/data_source/")
+ds_path = os.path.join(path, f"data/4_features/")
+model_dirpath = os.path.join(path, f"data/6_models/")
+
+
+ds_listdir = []
+for _path, subdirs, files in os.walk(ds_path):
+    for name in files:
+        if not name.endswith(".csv"):
+            continue
+        if _path.split("/")[-1].startswith("baseline"):
+            continue
+        ds_listdir.append(os.path.join(_path, name))
+
+ds_listdir = [i for i in ds_listdir if os.path.basename(i) != "MRMR_nfeatures_auto.csv"]
+
+src_listdir = []
+for path, subdirs, files in os.walk(src_path):
+    for name in files:
+        if not name.endswith(".parquet"):
+            continue
+        src_listdir.append(os.path.join(path, name))
+
+n_periods = 12
+
+estimators = [
+    LinearRegression(),
+    ElasticNet(),
+    # asgl.ASGL(model='lm', penalization='alasso'),  # Adaptive Lasso
+    LinearTreeRegressor(base_estimator=LinearRegression()),
+    LinearForestRegressor(base_estimator=LinearRegression(), max_features=None),
+    LinearBoostRegressor(base_estimator=LinearRegression()),
+    RandomForestRegressor(),
+    # AdaptiveRandomForestRegressor(random_state=123456),
+    # GradientBoostingRegressor(),
+    XGBRegressor(),
+]
+
+list_df = []
+for ds_fname in ds_listdir:
+    if not ds_fname.endswith(".csv"):
+        continue
+
+    ds_long = pd.read_csv(ds_fname)
+    if ds_long.shape[1] == 1:
+        ds_long = pd.read_csv(ds_fname, sep=";")
+        ds_long["reference_date"] = ds_long["reference_date"].str.split(
+            " ", expand=True
+        )[0]
+
+    try:
+        ds_long = convert_to_datetime(ds_long, ["reference_date"])
+    except:
+        ds_long = ds_long.loc[
+            : (ds_long.loc[ds_long["reference_date"] == "reference_date"].index[0] - 1)
+        ]
+        ds_long = convert_to_datetime(ds_long, ["reference_date"])
+        ds_long["IsTarget"] = ds_long["IsTarget"].astype(int)
+        ds_long["value"] = ds_long["value"].astype(float)
+
+    ds_long["ds_fname"] = ds_fname
+
+    list_df.append(ds_long)
+
+
 from multiprocessing import Pool
 
 if __name__ == "__main__":
-    # path = Path(os.path.dirname(__file__))
-    path="/root/pf-comp/"
-
-    src_path = os.path.join(path, "data/03_intermediate/data_source/")
-    ds_path = os.path.join(path, f"data/4_features/")
-    model_dirpath = os.path.join(path, f"data/6_models/")
-
-
-    ds_listdir = []
-    for _path, subdirs, files in os.walk(ds_path):
-        for name in files:
-            if not name.endswith(".csv"):
-                continue
-            if _path.split("/")[-1].startswith("baseline"):
-                continue
-            ds_listdir.append(os.path.join(_path, name))
-
-    ds_listdir = [i for i in ds_listdir if os.path.basename(i) != "MRMR_nfeatures_auto.csv"]
-
-    src_listdir = []
-    for path, subdirs, files in os.walk(src_path):
-        for name in files:
-            if not name.endswith(".parquet"):
-                continue
-            src_listdir.append(os.path.join(path, name))
-
-    n_periods = 12
-
-    estimators = [
-        LinearRegression(),
-        ElasticNet(),
-        # asgl.ASGL(model='lm', penalization='alasso'),  # Adaptive Lasso
-        LinearTreeRegressor(base_estimator=LinearRegression()),
-        LinearForestRegressor(base_estimator=LinearRegression(), max_features=None),
-        LinearBoostRegressor(base_estimator=LinearRegression()),
-        RandomForestRegressor(),
-        # AdaptiveRandomForestRegressor(random_state=123456),
-        # GradientBoostingRegressor(),
-        XGBRegressor(),
-    ]
-
-    list_df = []
-    for ds_fname in ds_listdir:
-        if not ds_fname.endswith(".csv"):
-            continue
-
-        ds_long = pd.read_csv(ds_fname)
-        if ds_long.shape[1] == 1:
-            ds_long = pd.read_csv(ds_fname, sep=";")
-            ds_long["reference_date"] = ds_long["reference_date"].str.split(
-                " ", expand=True
-            )[0]
-
-        try:
-            ds_long = convert_to_datetime(ds_long, ["reference_date"])
-        except:
-            ds_long = ds_long.loc[
-                : (ds_long.loc[ds_long["reference_date"] == "reference_date"].index[0] - 1)
-            ]
-            ds_long = convert_to_datetime(ds_long, ["reference_date"])
-            ds_long["IsTarget"] = ds_long["IsTarget"].astype(int)
-            ds_long["value"] = ds_long["value"].astype(float)
-
-        ds_long["ds_fname"] = ds_fname
-
-        list_df.append(ds_long)
 
     with Pool(8) as p:
         # results = p.map(main, list_df)
