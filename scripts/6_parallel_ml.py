@@ -149,6 +149,15 @@ def main(df_long):
     ds_fname = set(df_long["ds_fname"]).pop()
     ds_long = df_long.drop(columns=["ds_fname"])
 
+    model_output_fname = (
+        os.path.basename(ds_fname)
+        .replace("csv", "json")
+    )
+
+    if model_output_fname in os.listdir(model_dirpath):
+        print(f"WARNING: {model_output_fname} already exists.")
+        return
+
     y_fields = set(ds_long.loc[ds_long["IsTarget"] == 1]["series_code"])
     assert len(y_fields) == 1
 
@@ -224,19 +233,20 @@ def main(df_long):
     benchmark_backcast.index.name = "reference_date"
 
     # iterating over different algorithms
+    exp_results = []
     for model in estimators:
-        model_output_fname = (
-            os.path.basename(ds_fname)
-            .replace(
-                "df_actual_real_time_vintage_",
-                f"df_mod_out_{type(model).__name__}_",
-                1,
-            )
-            .replace(".csv", ".json")
-        )
-        if model_output_fname in os.listdir(model_dirpath):
-            print(f"WARNING: {model_output_fname} already exists.")
-            continue
+        # model_output_fname = (
+        #     os.path.basename(ds_fname)
+        #     .replace(
+        #         "df_actual_real_time_vintage_",
+        #         f"df_mod_out_{type(model).__name__}_",
+        #         1,
+        #     )
+        #     .replace(".csv", ".json")
+        # )
+        # if model_output_fname in os.listdir(model_dirpath):
+        #     print(f"WARNING: {model_output_fname} already exists.")
+        #     continue
 
         print(f"INFO: Estimating {type(model).__name__}...")
 
@@ -404,9 +414,14 @@ def main(df_long):
             }
         )
 
-        with open(os.path.join(model_dirpath, model_output_fname), "w") as f:
-            json.dump(accuracy_report, f)
-        print(f"INFO: {model_output_fname} saved locally")
+        # with open(os.path.join(model_dirpath, model_output_fname), "w") as f:
+        #     json.dump(accuracy_report, f)
+        # print(f"INFO: {model_output_fname} saved locally")
+        exp_results.append({
+            f"{type(model).__name__}": accuracy_report
+        })
+    with open(os.path.join(model_dirpath, model_output_fname), "w") as f:
+        json.dump(exp_results, f)
     print(17 * "-")
     # return accuracy_report
 
