@@ -426,11 +426,12 @@ def main(df_long):
     # return accuracy_report
 
 
-path = Path(os.path.dirname(__file__))
+# path = Path(os.path.dirname(__file__))
+path="/root/pf-comp/"
 
-src_path = os.path.join(path.parent.absolute(), "data/03_intermediate/data_source/")
-ds_path = os.path.join(path.parent.absolute(), f"data/4_features/")
-model_dirpath = os.path.join(path.parent.absolute(), f"data/6_models/")
+src_path = os.path.join(path, "data/03_intermediate/data_source/")
+ds_path = os.path.join(path, f"data/4_features/")
+model_dirpath = os.path.join(path, f"data/6_models/")
 
 
 ds_listdir = []
@@ -496,7 +497,7 @@ for ds_fname in ds_listdir:
 from multiprocessing import Pool
 
 if __name__ == "__main__":
-    with Pool(4) as p:
+    with Pool(8) as p:
         # results = p.map(main, list_df)
         p.map(main, list_df)
 
