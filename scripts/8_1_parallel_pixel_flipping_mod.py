@@ -94,6 +94,15 @@ def main(df_long):
     ds_fname = set(df_long["ds_fname"]).pop()
     ds_long = df_long.drop(columns=["ds_fname"])
 
+    model_output_fname = (
+        os.path.basename(ds_fname)
+        .replace("csv", "json")
+    )
+
+    if model_output_fname in os.listdir(model_dirpath):
+        print(f"WARNING: {model_output_fname} already exists.")
+        continue
+
     y_fields = set(ds_long.loc[ds_long["IsTarget"] == 1]["series_code"])
     assert len(y_fields) == 1
 
@@ -171,6 +180,7 @@ def main(df_long):
     # iterating over features
     features = set(df_pivot.drop(columns=[y_code]).columns)
     state_list = []
+    exp_i, exp_results = 0, []
     for x in features:
         time_series = df_pivot[x]
         # Determine the length of the time series
@@ -188,24 +198,25 @@ def main(df_long):
 
             # iterating over different algorithms
             for model in estimators:
-                check = (
-                    log_df.loc[
-                        (log_df["y_code"] == y_code)
-                        & (
-                            log_df["reference_date"]
-                            == reference_date.strftime("%Y%m%d")
-                        )
-                        & (log_df["model"] == type(model).__name__)
-                        & (log_df["x"] == x)
-                    ].shape[0]
-                    >= num_starting_points
-                )
+                exp_i = exp_i + 1
+                # check = (
+                #     log_df.loc[
+                #         (log_df["y_code"] == y_code)
+                #         & (
+                #             log_df["reference_date"]
+                #             == reference_date.strftime("%Y%m%d")
+                #         )
+                #         & (log_df["model"] == type(model).__name__)
+                #         & (log_df["x"] == x)
+                #     ].shape[0]
+                #     >= num_starting_points
+                # )
 
-                if check:
-                    print(
-                        "INFO: Pixel flipping done for current setup. Moving to next iteration."
-                    )
-                    continue
+                # if check:
+                #     print(
+                #         "INFO: Pixel flipping done for current setup. Moving to next iteration."
+                #     )
+                #     continue
 
                 forecasts_df, coef_df = pd.DataFrame(), pd.DataFrame()
 
@@ -214,16 +225,16 @@ def main(df_long):
                     .iloc[start_index]["reference_date"]
                     .strftime("%Y%m%d")
                 )
-                model_output_fname = (
-                    os.path.basename(ds_fname)
-                    .replace("df_", f'fcst_{type(model).__name__}_{reference_date.strftime("%Y%m%d")}_', 1)
-                    .replace(".csv", "")
-                    + f'_feature_{x}_start_index_{start_index}_{start_date}.json'
-                )
+                # model_output_fname = (
+                #     os.path.basename(ds_fname)
+                #     .replace("df_", f'fcst_{type(model).__name__}_{reference_date.strftime("%Y%m%d")}_', 1)
+                #     .replace(".csv", "")
+                #     + f'_feature_{x}_start_index_{start_index}_{start_date}.json'
+                # )
 
-                if model_output_fname in os.listdir(model_dirpath):
-                    print(f"WARNING: {model_output_fname} already exists.")
-                    continue
+                # if model_output_fname in os.listdir(model_dirpath):
+                #     print(f"WARNING: {model_output_fname} already exists.")
+                #     continue
 
                 # print(f"INFO: Estimating {type(model).__name__}...")
 
@@ -242,10 +253,6 @@ def main(df_long):
 
                     df_train.index = pd.DatetimeIndex(df_train.index.values, freq="MS")
                     df_test.index = pd.DatetimeIndex(df_test.index.values, freq="MS")
-
-                    #                     print(f"INFO: Estimating {type(model).__name__}...")
-
-                    # assert (df_pivot[x].loc[assert_index] != df_train[x].loc[assert_index]).any()
 
                     X_train, y_train = (
                         df_train.drop(columns=[y_code]),
@@ -405,8 +412,8 @@ def main(df_long):
                     }
                 )
 
-                with open(os.path.join(model_dirpath, model_output_fname), "w") as f:
-                    json.dump(accuracy_report, f)
+                # with open(os.path.join(model_dirpath, model_output_fname), "w") as f:
+                #     json.dump(accuracy_report, f)
                 state_list.append(
                     {
                         "y_code": y_code,
@@ -417,18 +424,21 @@ def main(df_long):
                         "start_date": start_date,
                     }
                 )
+                exp_results.append({f"experiment_{exp_i}": accuracy_report})
 
     save_state(
         state_list=state_list,
         log_path=os.path.join(
-            '/Users/ejowik001/Desktop/pf-comp/logs/', f'log_{os.path.basename(ds_fname).split(".")[0]}.json'
+            args.log_path, f'/log_{os.path.basename(ds_fname).split(".")[0]}.json'
         ),
     )
+    with open(os.path.join(model_dirpath, model_output_fname), "w") as f:
+        json.dump(accuracy_report, f)
     print(17 * "-")
 
 
-path = Path(os.path.dirname(__file__)).parent
-# path = "/home2/faculty/ejowik/mts-nowcasting/"
+# path = Path(os.path.dirname(__file__))
+path = "/home2/faculty/ejowik/mts-nowcasting/"
 
 src_path = os.path.join(path, "data/03_intermediate/data_source/")
 ds_path = os.path.join(path, f"data/4_features/")
@@ -436,7 +446,7 @@ model_dirpath = os.path.join(path, f"data/7_pixel_flipping/")
 
 n_periods = 12
 window_size = 12
-num_starting_points = 1
+num_starting_points = 1 
 
 estimators = [
     LinearRegression(),
@@ -495,12 +505,11 @@ for ds_fname in ds_listdir:
 
     list_df.append(ds_long)
 
-list_df = list_df[::-1]
 
 from multiprocessing import Pool
 
 if __name__ == "__main__":
-    with Pool(6) as p:
+    with Pool(124) as p:
         # results = p.map(main, list_df)
         p.map(main, list_df)
 
