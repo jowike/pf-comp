@@ -76,7 +76,7 @@ def __arima_feed(series, h=6):
 #         json.dump(log_update, logfile)
 
 
-def main_body(df_long):
+def main_unit(df_long):
     # parser = argparse.ArgumentParser()
     # parser.add_argument("--log-path")
     # args = parser.parse_args()
@@ -518,7 +518,7 @@ if __name__ == "__main__":
 
     with Pool(8) as p:
         # results = p.map(main, list_df)
-        p.map(main_body, list_df)
+        p.map(main_unit, list_df)
 
         # for result in results:
         #     print(results)
