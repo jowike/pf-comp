@@ -494,7 +494,7 @@ if __name__ == "__main__":
 
         ds_long["ds_fname"] = ds_fname
 
-        list_df.append(ds_long)`
+        list_df.append(ds_long)
 
     with Pool(8) as p:
         # results = p.map(main, list_df)
