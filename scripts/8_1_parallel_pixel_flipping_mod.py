@@ -60,36 +60,36 @@ def __arima_feed(series, h=6):
     return forecast_series
 
 
-def load_state(log_path: str):
-    try:
-        with open(log_path, "r") as logfile:
-            log = json.load(logfile)
-    except (json.JSONDecodeError, FileNotFoundError):
-        log = []
-    return log
+# def load_state(log_path: str):
+#     try:
+#         with open(log_path, "r") as logfile:
+#             log = json.load(logfile)
+#     except (json.JSONDecodeError, FileNotFoundError):
+#         log = []
+#     return log
 
 
-def save_state(state_list, log_path):
-    log = load_state(log_path)
-    log_update = log + state_list
-    with open(log_path, "w") as logfile:
-        json.dump(log_update, logfile)
+# def save_state(state_list, log_path):
+#     log = load_state(log_path)
+#     log_update = log + state_list
+#     with open(log_path, "w") as logfile:
+#         json.dump(log_update, logfile)
 
 
 def main(df_long):
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--log-path")
-    args = parser.parse_args()
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("--log-path")
+    # args = parser.parse_args()
 
-    log_listdir = os.listdir(args.log_path)
-    log = []
-    for log_path in log_listdir:
-        log = log + load_state(os.path.join(args.log_path, log_path))
+    # log_listdir = os.listdir(args.log_path)
+    # log = []
+    # for log_path in log_listdir:
+    #     log = log + load_state(os.path.join(args.log_path, log_path))
 
-    log_df = pd.DataFrame(
-        log,
-        columns=["y_code", "reference_date", "model", "x", "start_index", "start_date"],
-    )
+    # log_df = pd.DataFrame(
+    #     log,
+    #     columns=["y_code", "reference_date", "model", "x", "start_index", "start_date"],
+    # )
 
     ds_fname = set(df_long["ds_fname"]).pop()
     ds_long = df_long.drop(columns=["ds_fname"])
@@ -101,7 +101,7 @@ def main(df_long):
 
     if model_output_fname in os.listdir(model_dirpath):
         print(f"WARNING: {model_output_fname} already exists.")
-        continue
+        return
 
     y_fields = set(ds_long.loc[ds_long["IsTarget"] == 1]["series_code"])
     assert len(y_fields) == 1
@@ -426,19 +426,20 @@ def main(df_long):
                 )
                 exp_results.append({f"experiment_{exp_i}": accuracy_report})
 
-    save_state(
-        state_list=state_list,
-        log_path=os.path.join(
-            args.log_path, f'/log_{os.path.basename(ds_fname).split(".")[0]}.json'
-        ),
-    )
+    # save_state(
+    #     state_list=state_list,
+    #     log_path=os.path.join(
+    #         args.log_path, f'/log_{os.path.basename(ds_fname).split(".")[0]}.json'
+    #     ),
+    # )
     with open(os.path.join(model_dirpath, model_output_fname), "w") as f:
-        json.dump(accuracy_report, f)
+        json.dump(exp_results, f)
     print(17 * "-")
 
 
 # path = Path(os.path.dirname(__file__))
-path = "/home2/faculty/ejowik/mts-nowcasting/"
+# path = "/home2/faculty/ejowik/mts-nowcasting/"
+path = "/Users/ejowik001/Desktop/pf-comp/"
 
 src_path = os.path.join(path, "data/03_intermediate/data_source/")
 ds_path = os.path.join(path, f"data/4_features/")
@@ -509,7 +510,7 @@ for ds_fname in ds_listdir:
 from multiprocessing import Pool
 
 if __name__ == "__main__":
-    with Pool(124) as p:
+    with Pool(4) as p:
         # results = p.map(main, list_df)
         p.map(main, list_df)
 
