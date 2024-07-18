@@ -76,7 +76,7 @@ def __arima_feed(series, h=6):
 #         json.dump(log_update, logfile)
 
 
-def main(df_long):
+def main_body(df_long):
     # parser = argparse.ArgumentParser()
     # parser.add_argument("--log-path")
     # args = parser.parse_args()
@@ -515,7 +515,7 @@ from multiprocessing import Pool
 if __name__ == "__main__":
     with Pool(4) as p:
         # results = p.map(main, list_df)
-        p.map(main, list_df)
+        p.map(main_body, list_df)
 
         # for result in results:
         #     print(results)
