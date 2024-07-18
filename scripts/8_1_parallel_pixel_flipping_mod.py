@@ -179,7 +179,7 @@ def main(df_long):
 
     # iterating over features
     features = set(df_pivot.drop(columns=[y_code]).columns)
-    state_list = []
+    # state_list = []
     exp_i, exp_results = 0, []
     for x in features:
         time_series = df_pivot[x]
@@ -387,6 +387,9 @@ def main(df_long):
                     "fs_method": fs_method,
                     "coefficients": coef_df[f"model{n_periods}"].to_dict(),
                     "eval_metrics": eval_out,
+                    "x": x,
+                    "start_index": int(start_index),
+                    "start_date": start_date,
                 }
 
                 y_pred = forecast_df_diag
@@ -408,22 +411,22 @@ def main(df_long):
                         "y_actual": y.to_dict(),
                         "y_src": y_src.to_dict(),
                         "ds_fname": ds_fname,
-                        "out_fname": model_output_fname,
+                        # "out_fname": model_output_fname,
                     }
                 )
 
                 # with open(os.path.join(model_dirpath, model_output_fname), "w") as f:
                 #     json.dump(accuracy_report, f)
-                state_list.append(
-                    {
-                        "y_code": y_code,
-                        "reference_date": reference_date.strftime("%Y%m%d"),
-                        "model": type(model).__name__,
-                        "x": x,
-                        "start_index": int(start_index),
-                        "start_date": start_date,
-                    }
-                )
+                # state_list.append(
+                #     {
+                #         "y_code": y_code,
+                #         "reference_date": reference_date.strftime("%Y%m%d"),
+                #         "model": type(model).__name__,
+                #         "x": x,
+                #         "start_index": int(start_index),
+                #         "start_date": start_date,
+                #     }
+                # )
                 exp_results.append({f"experiment_{exp_i}": accuracy_report})
 
     # save_state(
