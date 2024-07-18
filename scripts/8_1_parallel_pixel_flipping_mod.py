@@ -516,7 +516,7 @@ if __name__ == "__main__":
 
 
 
-    with Pool(4) as p:
+    with Pool(8) as p:
         # results = p.map(main, list_df)
         p.map(main_body, list_df)
 
