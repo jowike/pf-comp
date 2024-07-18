@@ -440,79 +440,82 @@ def main_body(df_long):
     print(17 * "-")
 
 
-# path = Path(os.path.dirname(__file__))
-# path = "/home2/faculty/ejowik/mts-nowcasting/"
-path = "/Users/ejowik001/Desktop/pf-comp/"
-
-src_path = os.path.join(path, "data/03_intermediate/data_source/")
-ds_path = os.path.join(path, f"data/4_features/")
-model_dirpath = os.path.join(path, f"data/7_pixel_flipping/")
-
-n_periods = 12
-window_size = 12
-num_starting_points = 1 
-
-estimators = [
-    LinearRegression(),
-    ElasticNet(),
-    LinearTreeRegressor(base_estimator=LinearRegression()),
-    LinearForestRegressor(base_estimator=LinearRegression(), max_features=None),
-    LinearBoostRegressor(base_estimator=LinearRegression()),
-    RandomForestRegressor(),
-    XGBRegressor(),
-]
-
-src_listdir = []
-for path, subdirs, files in os.walk(src_path):
-    for name in files:
-        if not name.endswith(".parquet"):
-            continue
-        src_listdir.append(os.path.join(path, name))
-
-
-ds_listdir = []
-for path, subdirs, files in os.walk(ds_path):
-    for name in files:
-        if not name.endswith(".csv"):
-            continue
-        if path.split("/")[-1].startswith("baseline"):
-            continue
-        ds_listdir.append(os.path.join(path, name))
-
-ds_listdir = [i for i in ds_listdir if os.path.basename(i) != "MRMR_nfeatures_auto.csv"]
-
-
-list_df = []
-for ds_fname in ds_listdir:
-    if not ds_fname.endswith(".csv"):
-        continue
-
-    # print(ds_fname)
-    ds_long = pd.read_csv(ds_fname)
-    if ds_long.shape[1] == 1:
-        ds_long = pd.read_csv(ds_fname, sep=";")
-        ds_long["reference_date"] = ds_long["reference_date"].str.split(
-            " ", expand=True
-        )[0]
-
-    try:
-        ds_long = convert_to_datetime(ds_long, ["reference_date"])
-    except:
-        ds_long = ds_long.loc[
-            : (ds_long.loc[ds_long["reference_date"] == "reference_date"].index[0] - 1)
-        ]
-        ds_long = convert_to_datetime(ds_long, ["reference_date"])
-        ds_long["IsTarget"] = ds_long["IsTarget"].astype(int)
-        ds_long["value"] = ds_long["value"].astype(float)
-
-    ds_long["ds_fname"] = ds_fname
-
-    list_df.append(ds_long)
-
-
 from multiprocessing import Pool
 
 if __name__ == "__main__":
+
+    # path = Path(os.path.dirname(__file__))
+    # path = "/home2/faculty/ejowik/mts-nowcasting/"
+    # path = "/Users/ejowik001/Desktop/pf-comp/"
+    path = "/root/pf-comp/"
+
+    src_path = os.path.join(path, "data/03_intermediate/data_source/")
+    ds_path = os.path.join(path, f"data/4_features/")
+    model_dirpath = os.path.join(path, f"data/7_pixel_flipping/")
+
+    n_periods = 12
+    window_size = 12
+    num_starting_points = 1 
+
+    estimators = [
+        LinearRegression(),
+        ElasticNet(),
+        LinearTreeRegressor(base_estimator=LinearRegression()),
+        LinearForestRegressor(base_estimator=LinearRegression(), max_features=None),
+        LinearBoostRegressor(base_estimator=LinearRegression()),
+        RandomForestRegressor(),
+        XGBRegressor(),
+    ]
+
+    src_listdir = []
+    for path, subdirs, files in os.walk(src_path):
+        for name in files:
+            if not name.endswith(".parquet"):
+                continue
+            src_listdir.append(os.path.join(path, name))
+
+
+    ds_listdir = []
+    for path, subdirs, files in os.walk(ds_path):
+        for name in files:
+            if not name.endswith(".csv"):
+                continue
+            if path.split("/")[-1].startswith("baseline"):
+                continue
+            ds_listdir.append(os.path.join(path, name))
+
+    ds_listdir = [i for i in ds_listdir if os.path.basename(i) != "MRMR_nfeatures_auto.csv"]
+
+
+    list_df = []
+    for ds_fname in ds_listdir:
+        if not ds_fname.endswith(".csv"):
+            continue
+
+        # print(ds_fname)
+        ds_long = pd.read_csv(ds_fname)
+        if ds_long.shape[1] == 1:
+            ds_long = pd.read_csv(ds_fname, sep=";")
+            ds_long["reference_date"] = ds_long["reference_date"].str.split(
+                " ", expand=True
+            )[0]
+
+        try:
+            ds_long = convert_to_datetime(ds_long, ["reference_date"])
+        except:
+            ds_long = ds_long.loc[
+                : (ds_long.loc[ds_long["reference_date"] == "reference_date"].index[0] - 1)
+            ]
+            ds_long = convert_to_datetime(ds_long, ["reference_date"])
+            ds_long["IsTarget"] = ds_long["IsTarget"].astype(int)
+            ds_long["value"] = ds_long["value"].astype(float)
+
+        ds_long["ds_fname"] = ds_fname
+
+        list_df.append(ds_long)
+
+
+
     with Pool(4) as p:
         # results = p.map(main, list_df)
         p.map(main_body, list_df)
