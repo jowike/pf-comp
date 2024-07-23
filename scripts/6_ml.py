@@ -147,9 +147,9 @@ def _naive_forecasting(actual: np.ndarray):
 # path = Path(os.path.dirname(__file__))
 path = "/root/pf-comp/"
 
-src_path = os.path.join(path.parent.absolute(), "data/03_intermediate/data_source/")
-ds_path = os.path.join(path.parent.absolute(), f"data/4_features/")
-model_dirpath = os.path.join(path.parent.absolute(), f"data/6_models/")
+src_path = os.path.join(path, "data/03_intermediate/data_source/")
+ds_path = os.path.join(path, f"data/4_features/")
+model_dirpath = os.path.join(path, f"data/6_models/")
 
 
 ds_listdir = []
